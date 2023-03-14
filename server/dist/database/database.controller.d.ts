@@ -1,0 +1,51 @@
+/// <reference types="multer" />
+import Account from "src/interfaces/account.interface";
+import ExcelProjectParams from "src/interfaces/excel_project_params.interface";
+import Expense from "src/interfaces/expense.interface";
+import Fellow from "src/interfaces/fellow.interface";
+import Installment from "src/interfaces/installment.interface";
+import Project from "src/interfaces/project.interface";
+import { DatabaseService } from "./database.service";
+export declare class DatabaseController {
+    private readonly databaseService;
+    constructor(databaseService: DatabaseService);
+    all_grants(jwt: string): Promise<any[]>;
+    grant_details(jwt: string, project_id: number): Promise<any>;
+    all_fellows(jwt: string): Promise<any[]>;
+    project_fellows(jwt: string, project_id: number): Promise<any[]>;
+    project_expenses(jwt: string, project_id: string): Promise<any[]>;
+    project_budget(jwt: string, project_id: number): Promise<any[]>;
+    project_remaining(jwt: string, project_id: number, actual: boolean, committed: boolean): Promise<any>;
+    all_accounts(jwt: string): Promise<any[]>;
+    project_access(jwt: string, project_id: number): Promise<any[]>;
+    user_data(jwt: string): Promise<Account>;
+    active_faculty(jwt: string): Promise<any[]>;
+    project_sanction(jwt: string, project_id: number): Promise<any>;
+    pending_projects(jwt: string): Promise<any[]>;
+    pending_expenses(jwt: string): Promise<any[]>;
+    get_notifications(jwt: string): Promise<any[]>;
+    toggle_pin(jwt: string, project_id: number): Promise<any>;
+    add_account(jwt: string, account: Account): Promise<import("pg").QueryResult<any>>;
+    add_project(jwt: string, project: Project): Promise<import("pg").QueryResult<any>>;
+    add_project_excel(jwt: string, body: ExcelProjectParams, file: Express.Multer.File): Promise<any>;
+    add_expense(jwt: string, expense: Expense): Promise<import("pg").QueryResult<any>>;
+    add_access(jwt: string, email: string, project_id: number): Promise<import("pg").QueryResult<any>>;
+    add_installment(jwt: string, project_id: number, installment: Installment): Promise<import("pg").QueryResult<any>>;
+    add_fellow(jwt: string, project_id: number, fellow: Fellow): Promise<import("pg").QueryResult<any>>;
+    alter_expense(jwt: string, expense: Expense, expense_id: number): Promise<import("pg").QueryResult<any>>;
+    alter_installment(jwt: string, expense_id: number, split: {
+        [key: string]: number;
+    }): Promise<import("pg").QueryResult<any>>;
+    alter_sanction(jwt: string, project_id: number, head: string, amount: number): Promise<import("pg").QueryResult<any>>;
+    alter_project(jwt: string, project: Project, project_id: number): Promise<import("pg").QueryResult<any>>;
+    alter_account(jwt: string, account: Account, email: string): Promise<import("pg").QueryResult<any>>;
+    alter_access(jwt: string, email: string, role: string, project_id: number): Promise<import("pg").QueryResult<any>>;
+    alter_fellow(jwt: string, fellow: Fellow, fellow_id: number): Promise<import("pg").QueryResult<any>>;
+    alter_pending_project(jwt: string, accepted: boolean, pending_id: number): Promise<import("pg").QueryResult<any>>;
+    alter_pending_expense(jwt: string, accepted: boolean, pending_id: number): Promise<import("pg").QueryResult<any>>;
+    delete_grants(jwt: string, ids: number[]): Promise<import("pg").QueryResult<any>>;
+    delete_expenses(jwt: string, ids: number[]): Promise<import("pg").QueryResult<any>>;
+    delete_access(jwt: string, emails: string[], project_id: number): Promise<import("pg").QueryResult<any>>;
+    delete_users(jwt: string, emails: string[]): Promise<import("pg").QueryResult<any>>;
+    delete_fellows(jwt: string, fellow_ids: number[]): Promise<import("pg").QueryResult<any>>;
+}

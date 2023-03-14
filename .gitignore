@@ -1,0 +1,9 @@
+# dependencies
+node_modules
+.parcel-cache
+
+# IDE
+.vscode
+
+# misc
+npm-debug.log

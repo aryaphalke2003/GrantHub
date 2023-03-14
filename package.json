@@ -1,0 +1,20 @@
+{
+  "name": "grants-app",
+  "version": "0.1.0",
+  "description": "",
+  "scripts": {
+    "start": "npm --prefix ./server run start",
+    "start:dev": "npm --prefix ./server run start:dev",
+    "dev": "npm --prefix ./client run dev",
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "npm --prefix ./client run build",
+    "build:server": "npm --prefix ./server run build",
+    "build:prod": "npm --prefix ./client run build:prod && npm run build:server",
+    "postinstall": "npm --prefix ./client install && npm --prefix ./server install"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "gapi-script": "^1.2.0",
+    "jsonwebtoken": "^9.0.0"
+  }
+}
