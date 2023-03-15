@@ -42,6 +42,7 @@ export default function UsersPage() {
                     </Collapse>
                 </MyCard>
             </div>
+            
         </PageContainer>
     );
 }
