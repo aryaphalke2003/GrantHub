@@ -207,6 +207,7 @@ export default function BudgetTable({
                     />,
                 ]}
                 onChange={v => setCurrentTab(v)}
+                
             />
         </>
     );
