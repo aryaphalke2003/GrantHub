@@ -25,6 +25,7 @@ let DatabaseService = class DatabaseService {
             password: process.env.PGPASSWORD,
             database: process.env.PGDATABASE,
             port: +process.env.PGPORT,
+            ssl: true
             // host: '127.0.0.1',
             // user: 'postgres',
             // password: 'root',
