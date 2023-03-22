@@ -3,7 +3,9 @@
 This website is built using NodeJS v16.13.2 and npm v8.1.2. These specific versions should be installed.
 
 To install dependencies:
+```
 $ npm i
+```
 
 To compile (for production):
 $ npm run build:client
