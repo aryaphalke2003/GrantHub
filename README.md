@@ -31,19 +31,21 @@ $ pg_restore -d grants -O dump.pg
 ```
 Ignore any errors in the second command
 
-Update the required details in `server/src/.env`. Specifically, the following fields need to be specified
+Update the required details in `server/.env` & `client/.env`. Specifically, the following fields need to be specified
 ```
-PGUSER=postgres
 PGHOST=127.0.0.1
 PGPASSWORD=
 PGDATABASE=grants
 PGPORT=5432
+GOOGLE_CLIENT_ID=
 
 `PGUSER` is the postgres user to use to login
 `PGHOST` is the URL of the database server (127.0.0.1 for local system)
 `PGPASSWORD` is the password of the postgres user
 `PGDATABASE` is the name of the database to connect to (`grants` if the previous commands were used)
 `PGPORT` is the port that the postgres server is listening on (5432 for a default postgres installation)
+`GOOGLE_CLIENT_ID` is your client id
+
 ```
 
 To restore database on server:
