@@ -1,6 +1,0 @@
-1) Add option of Project number and sanction number, where sanction number would serve as a foreign key to tally records.
-2) Actual & Committed option in expenditure , where once an expense is committed it will show up as a seperate commit in a budget head, 
-and when actual cost incurs it is removed(or seperated) from that commit.
-
-3)Change some headings when project is opened.
-4)Add an list of project sponsors with a dropdown menu and Co-PI
