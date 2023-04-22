@@ -24,7 +24,8 @@ export default function ProjectDescription({
     const [name, setName] = useState<string>("");
     const [org, setOrg] = useState<string>("");
     const [total, setTotal] = useState<number>(0);
-    const [remarks, setRemarks] = useState<string>("");
+    
+    const [type, setType] = useState<string>("");
     const [pi, setPi] = useState<string>("");
     const [fromDate, setFromDate] = useState("");
     const [toDate, setToDate] = useState("");
@@ -40,7 +41,7 @@ export default function ProjectDescription({
                 setName(data.name);
                 setOrg(data.organization);
                 setTotal(data.total_cost);
-                setRemarks(data.remarks);
+                setType(data.type);
                 setPi(`${data.pi_name} (${data.pi_email})`);
                 typeCallback(data.type);
                 let d = new Date(Date.parse(data.from_date));
@@ -55,32 +56,42 @@ export default function ProjectDescription({
 
     return (
         <>
-            <Grid container spacing={3}>
+            <Grid container spacing={4}>
                 <Grid item xs={2}>
-                    <DescPaper header="Ref. No.:">{project_id}</DescPaper>
+                    <DescPaper header="Project No.:">{project_id}</DescPaper>
                 </Grid>
-                <Grid item xs={3}>
-                    <DescPaper header="Project:">{name}</DescPaper>
+                <Grid item xs={2}>
+                    <DescPaper header="Sanction No.:">{project_id}</DescPaper>
                 </Grid>
-                <Grid item xs={3}>
-                    <DescPaper header="Total Cost:">₹{total}</DescPaper>
-                </Grid>
-                <Grid item xs={4}>
-                    <DescPaper header="Funding Agency:">{org}</DescPaper>
-                </Grid>
-                <Grid item xs={3}>
-                    <DescPaper header="Remarks:">{remarks}</DescPaper>
-                </Grid>
-                <Grid item xs={3}>
+                <Grid item xs={2}>
                     <DescPaper header="PI:">{pi}</DescPaper>
                 </Grid>
-                <Grid item xs={3}>
-                    <DescPaper header="From Date:">{fromDate}</DescPaper>
+                <Grid item xs={2}>
+                    <DescPaper header="Co PI:">{pi}</DescPaper>
                 </Grid>
-                <Grid item xs={3}>
-                    <DescPaper header="To Date:">{toDate}</DescPaper>
+                <Grid item xs={2}>
+                    <DescPaper header="Funding Agency:">{org}</DescPaper>
+                </Grid>
+                <Grid item xs={2}>
+                    <DescPaper header="Title:">{name}</DescPaper>
+                </Grid>
+                <Grid item xs={2}>
+                    <DescPaper header="Total Cost:">₹{total}</DescPaper>
+                </Grid>
+               
+                <Grid item xs={2}>
+                    <DescPaper header="Type:">{type}</DescPaper>
+                </Grid>
+                
+                <Grid item xs={2}>
+                    <DescPaper header="DOJ:">{fromDate}</DescPaper>
+                </Grid>
+                <Grid item xs={2}>
+                    <DescPaper header="DOE:">{toDate}</DescPaper>
                 </Grid>
             </Grid>
         </>
     );
 }
+
+             
