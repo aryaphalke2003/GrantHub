@@ -50,7 +50,7 @@ GOOGLE_CLIENT_ID=
 
 To restore database on server:
 ```
-$ pg_restore -h dbname.render.com -p 5432 -U dbuser -d grants_xg28 -v dump.pg
+$ pg_restore -h dbname.render.com -p 5432 -U dbuser -d grants_xg28 -v dump.backup
 ```
 
 To deploy on render: Connect git & deploy
