@@ -27,7 +27,7 @@ Database developed using PostgreSQL 13.6
 To create required database
 ```
 $ createdb grants
-$ pg_restore -d grants -O dump.pg
+$ pg_restore -d grants -O dump.backup
 ```
 Ignore any errors in the second command
 
