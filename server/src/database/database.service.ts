@@ -22,7 +22,7 @@ export class DatabaseService {
             password: process.env.PGPASSWORD,
             database: process.env.PGDATABASE,
             port: +process.env.PGPORT,
-            ssl: true
+           // ssl: true
         });
 
     }

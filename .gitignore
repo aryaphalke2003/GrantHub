@@ -3,7 +3,8 @@ node_modules
 .parcel-cache
 server/node_modules
 client/node_modules
-
+server/dist/database/database.service.js
+server/src/database/database.service.ts
 
 
 # IDE
