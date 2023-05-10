@@ -55,31 +55,36 @@ export default function ProjectDescription({
 
     return (
         <>
-            <Grid container spacing={3}>
+           <Grid container spacing={4}>
                 <Grid item xs={2}>
                     <DescPaper header="Project No.:">{project_id}</DescPaper>
                 </Grid>
-                
-                <Grid item xs={3}>
-                    <DescPaper header="Project:">{name}</DescPaper>
-                </Grid>
-                <Grid item xs={3}>
-                    <DescPaper header="Total Cost:">₹{total}</DescPaper>
-                </Grid>
-                <Grid item xs={4}>
-                    <DescPaper header="Funding Agency:">{org}</DescPaper>
-                </Grid>
-                <Grid item xs={3}>
-                    <DescPaper header="Remarks:">{remarks}</DescPaper>
-                </Grid>
-                <Grid item xs={3}>
+              
+                <Grid item xs={2}>
                     <DescPaper header="PI:">{pi}</DescPaper>
                 </Grid>
-                <Grid item xs={3}>
-                    <DescPaper header="From Date:">{fromDate}</DescPaper>
+                <Grid item xs={2}>
+                    <DescPaper header="Co PI:">{pi}</DescPaper>
                 </Grid>
-                <Grid item xs={3}>
-                    <DescPaper header="To Date:">{toDate}</DescPaper>
+                <Grid item xs={2}>
+                    <DescPaper header="Funding Agency:">{org}</DescPaper>
+                </Grid>
+                <Grid item xs={2}>
+                    <DescPaper header="Title:">{name}</DescPaper>
+                </Grid>
+                <Grid item xs={2}>
+                    <DescPaper header="Total Cost:">₹{total}</DescPaper>
+                </Grid>
+               
+                <Grid item xs={2}>
+                    <DescPaper header="Type:">{type}</DescPaper>
+                </Grid>
+                
+                <Grid item xs={2}>
+                    <DescPaper header="DOJ:">{fromDate}</DescPaper>
+                </Grid>
+                <Grid item xs={2}>
+                    <DescPaper header="DOE:">{toDate}</DescPaper>
                 </Grid>
             </Grid>
         </>
