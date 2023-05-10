@@ -16,13 +16,13 @@ export class DatabaseService {
 
     constructor() {
         this.pool = new Pool({
-            
+
             host: process.env.PGHOST,
             user: process.env.PGUSER,
             password: process.env.PGPASSWORD,
             database: process.env.PGDATABASE,
             port: +process.env.PGPORT,
-        // ssl: true
+            ssl: true
         });
 
     }
@@ -93,8 +93,7 @@ export class DatabaseService {
 
         return (
             await this.pool.query(
-                `SELECT * FROM get_ui_expenses($1::text, $2::${
-                    typeof project_id === "number" ? "int" : "int[]"
+                `SELECT * FROM get_ui_expenses($1::text, $2::${typeof project_id === "number" ? "int" : "int[]"
                 })`,
                 [auth.email, project_id]
             )
@@ -304,6 +303,15 @@ export class DatabaseService {
             remarks: "",
         } as Project;
 
+        let installment = {
+            particulars: "sdfsd",
+            voucher: "sdfsd",
+            date: '12/12/2012',
+            split: {},
+            remarks: "",
+        } as Installment;
+        
+
         const client = await this.pool.connect();
 
         try {
@@ -411,8 +419,8 @@ export class DatabaseService {
                     particulars:
                         particulars_cell.type === Excel.ValueType.RichText
                             ? (particulars_cell.value as any).richText
-                                  .map(x => x.text)
-                                  .join()
+                                .map(x => x.text)
+                                .join()
                             : particulars_cell.value,
                     date: ws.getCell(expenseRow, expStart[1] + 3).value,
                     amount: 0,

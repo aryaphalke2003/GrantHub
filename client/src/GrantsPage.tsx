@@ -142,7 +142,7 @@ const get_columns: (
         type: "number",
         headerName: "Total Cost",
         flex: 0.7,
-        valueFormatter: moneyFormatter,
+        valueFormatter : moneyFormatter,
         editable: false,
         headerClassName,
     },

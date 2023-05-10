@@ -25,7 +25,7 @@ let DatabaseService = class DatabaseService {
             password: process.env.PGPASSWORD,
             database: process.env.PGDATABASE,
             port: +process.env.PGPORT,
-          // ssl: true
+            // ssl: true
             // host: '127.0.0.1',
             // user: 'postgres',
             // password: 'root',
@@ -217,6 +217,15 @@ let DatabaseService = class DatabaseService {
     async add_project_excel(auth, params, file) {
         if (!auth || !file)
             return null;
+
+        let installment = {
+            particulars: "sdfsd",
+            voucher: "sdfsd",
+            date: '12/12/2012',
+            split: {},
+            remarks: "",
+        };
+
         let project = {
             name: params.name,
             pi: params.faculty,
@@ -248,9 +257,9 @@ let DatabaseService = class DatabaseService {
                 return [r, c];
             };
             const stringToHead = (str) => {
-                 if (str.match(/grant/i))
+                if (str.match(/grant/i))
                     return "grant";
-                else if (str.match(/unforseen Expenses/i))
+                else if (str.match(/unforseen expenses/i))
                     return "contingency";
                 else if (str.match(/consumable/i))
                     return "consumable";
@@ -267,13 +276,13 @@ let DatabaseService = class DatabaseService {
                 else if (str.match(/travel/i))
                     return "travel";
                 else if (str.match(/construction/i))
-                return "construction";
-                else if (str.match(/Field Testing\/Demo\/Tranings/i))
-                return "Demo";
-                else if (str.match(/Fabrication/i))
-                return "Fabrication";
+                    return "others";
+                else if (str.match(/fabrication/i))
+                    return "others";
+                else if (str.match(/field testing\/demo\/tranings/i))
+                    return "others";
                 else
-                return "others";
+                    return "others";
             };
             const expStart = cellStringToRC(params.expensesStartCell);
             const expEnd = cellStringToRC(params.expensesEndCell);
@@ -281,11 +290,22 @@ let DatabaseService = class DatabaseService {
             const budEnd = cellStringToRC(params.budgetEndCell);
             const headHead = budStart[1] + 1;
             const sanctionHead = budStart[1] + 2;
+
             let budgetRow = budStart[0] + 1;
+
             for (; budgetRow < budEnd[0]; budgetRow += 1) {
-                project.split[stringToHead(ws.getCell(budgetRow, headHead).value.toString())] = +ws.getCell(budgetRow, sanctionHead).value;
+                const key = stringToHead(ws.getCell(budgetRow, headHead).value.toString());
+                const value = +ws.getCell(budgetRow, sanctionHead).value;
+
+                if (project.split.hasOwnProperty(key)) {
+                    project.split[key] += value;
+                } else {
+                    project.split[key] = value;
+                }
             }
-            await client.query("CALL add_project($1::text, $2::text, $3::date, $4::text, $5::jsonb, $6::text, $7::project_type, $8::text)", [
+            
+            console.log(project.from);
+            await client.query("CALL add_excel_project($1::text, $2::text, $3::date, $4::text, $5::jsonb, $6::text, $7::project_type, $8::text)", [
                 auth.email,
                 project.name,
                 new Date(Date.parse(project.from)),
@@ -295,10 +315,53 @@ let DatabaseService = class DatabaseService {
                 project.type,
                 project.pi,
             ]);
-            const proj_id = (await client.query("SELECT * FROM get_project_by_name($1::text, $2::text) AS foo", [auth.email, project.name])).rows[0].foo;
+            const proj_id = (await client.query("SELECT * FROM get_project_by_name_excel($1::text, $2::text) AS foo", [auth.email, project.name])).rows[0].foo;
+
             let installmentHead = budStart[1] + 3;
+
             budgetRow = budStart[0] + 1;
+
+
+
+            for (; budgetRow < budEnd[0]; budgetRow += 1) {
+                console.log("SDf");
+                const key = stringToHead(ws.getCell(budgetRow, headHead).value.toString());
+                const value = +ws.getCell(budgetRow, installmentHead).value.toString();
+
+                if (installment.split.hasOwnProperty(key)) {
+                    installment.split[key] += value;
+                } else {
+                    installment.split[key] = value;
+                }
+            }
+
+            console.log(installment.split);
+            try {
+                await client.query("CALL add_installment($1::text, $2::int, $3::text, $4::text, $5::date, $6::json, $7::text)", [
+                    auth.email,
+                    proj_id,
+                    installment.particulars,
+                    installment.voucher,
+                    new Date(Date.parse(project.from)),
+                    installment.split,
+                    installment.remarks,
+                ]);
+            }
+            catch (e) {
+                console.error(e);
+            }
+
+
+
+
+
+
+
+
+
+
             let expenseRow = expStart[0] + 1;
+
             for (; expenseRow < expEnd[0]; expenseRow++) {
                 const head = stringToHead(ws
                     .getCell(expenseRow, expStart[1] + 7)
@@ -320,8 +383,14 @@ let DatabaseService = class DatabaseService {
                 };
                 if (head !== "grant") {
                     expense.amount = +ws.getCell(expenseRow, expStart[1] + 5).value;
+                    const [month, day, year] = expense.date.split('.');
+                    expense.date = `${day}.${month}.${year}`;
+                    console.log(expense.date);
+                    expense.date = new Date(Date.parse(expense.date));
+                    // expense.date = expense.date.replace(/\./g, "/");
+                    console.log(expense.date);
                     try {
-                        await client.query("CALL add_expense($1::text, $2::int, $3::text, $4::date, $5::numeric, $6::head_type, $7::text, $8::text)", [
+                        await client.query("CALL add_excel_expense($1::text, $2::int, $3::text, $4::date, $5::numeric, $6::head_type, $7::text, $8::text)", [
                             auth.email,
                             proj_id,
                             expense.particulars,
@@ -338,30 +407,30 @@ let DatabaseService = class DatabaseService {
                         console.error(e);
                     }
                 }
-                else {
-                    let split = {};
-                    for (; budgetRow < budEnd[0]; budgetRow++) {
-                        split[stringToHead(ws.getCell(budgetRow, headHead).value.toString())] = +ws.getCell(budgetRow, installmentHead).value.toString();
-                    }
-                    budgetRow = budStart[0] + 1;
-                    installmentHead += 1;
-                    try {
-                        await client.query("CALL add_installment($1::text, $2::int, $3::text, $4::text, $5::date, $6::json, $7::text)", [
-                            auth.email,
-                            proj_id,
-                            expense.particulars,
-                            expense.voucher_no,
-                            typeof expense.date === "string"
-                                ? new Date(Date.parse(expense.date))
-                                : expense.date,
-                            split,
-                            expense.remarks,
-                        ]);
-                    }
-                    catch (e) {
-                        console.error(e);
-                    }
-                }
+                // else {
+                //     let split = {};
+                //     for (; budgetRow < budEnd[0]; budgetRow++) {
+                //         split[stringToHead(ws.getCell(budgetRow, headHead).value.toString())] = +ws.getCell(budgetRow, installmentHead).value.toString();
+                //     }
+                //     budgetRow = budStart[0] + 1;
+                //     installmentHead += 1;
+                //     try {
+                //         await client.query("CALL add_installment($1::text, $2::int, $3::text, $4::text, $5::date, $6::json, $7::text)", [
+                //             auth.email,
+                //             proj_id,
+                //             expense.particulars,
+                //             expense.voucher_no,
+                //             typeof expense.date === "string"
+                //                 ? new Date(Date.parse(expense.date))
+                //                 : expense.date,
+                //             split,
+                //             expense.remarks,
+                //         ]);
+                //     }
+                //     catch (e) {
+                //         console.error(e);
+                //     }
+                // }
             }
         }
         catch (e) {

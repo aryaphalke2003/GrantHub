@@ -54,3 +54,8 @@ $ pg_restore -h dbname.render.com -p 5432 -U dbuser -d grants_xg28 -v dump.backu
 ```
 
 To deploy on render: Connect git & deploy
+
+
+"watch": "nodemon server.js & webpack --watch"
+npm run build:client
+npm run watch
