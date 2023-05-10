@@ -248,13 +248,13 @@ let DatabaseService = class DatabaseService {
                 return [r, c];
             };
             const stringToHead = (str) => {
-                if (str.match(/grant/i))
+                 if (str.match(/grant/i))
                     return "grant";
-                else if (str.match(/unforseen/i))
+                else if (str.match(/unforseen Expenses/i))
                     return "contingency";
                 else if (str.match(/consumable/i))
                     return "consumable";
-                else if (str.match(/overstr/i))
+                else if (str.match(/overheads/i))
                     return "overhead";
                 else if (str.match(/equipment/i))
                     return "equipment";
@@ -266,8 +266,14 @@ let DatabaseService = class DatabaseService {
                     return "consultancy_amount";
                 else if (str.match(/travel/i))
                     return "travel";
+                else if (str.match(/construction/i))
+                return "construction";
+                else if (str.match(/Field Testing\/Demo\/Tranings/i))
+                return "Demo";
+                else if (str.match(/Fabrication/i))
+                return "Fabrication";
                 else
-                    return "others";
+                return "others";
             };
             const expStart = cellStringToRC(params.expensesStartCell);
             const expEnd = cellStringToRC(params.expensesEndCell);
