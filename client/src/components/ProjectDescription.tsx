@@ -12,6 +12,10 @@ const DescPaper = ({ header, children }) => (
     </MyCard>
 );
 
+interface IData {
+    name: string;
+  }
+
 // Project description at the top of every project page
 export default function ProjectDescription({
     project_id,
@@ -26,17 +30,37 @@ export default function ProjectDescription({
     const [total, setTotal] = useState<number>(0);
     const [remarks, setRemarks] = useState<string>("");
     const [pi, setPi] = useState<string>("");
+    const [copi, setCopi] = useState<IData[]>([]);
     const [fromDate, setFromDate] = useState("");
     const [toDate, setToDate] = useState("");
 
     // fetch dats
+  
     useEffect(() => {
         axios
-            .get(`/api/grants/${project_id}`, {
+            .get(`/api/co_grants/${project_id}`, {
                 params: { auth: cookies.auth_jwt },
             })
             .then(({ data }) => {
                 if (data === null) return;
+                else {
+              
+               const objectNames = data.map((object) => ({name:object.name}));
+              
+
+              setCopi(objectNames);
+          
+            }
+            });
+    }, [project_id]);
+
+    useEffect(() => {
+        axios            .get(`/api/grants/${project_id}`, {
+                params: { auth: cookies.auth_jwt },
+            })
+            .then(({ data }) => {
+                if (data === null) return;
+                
                 setName(data.name);
                 setOrg(data.organization);
                 setTotal(data.total_cost);
@@ -51,7 +75,10 @@ export default function ProjectDescription({
                     setToDate(`${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`);
                 }
             });
-    }, [project_id]);
+    }, [project_id]  );
+   
+    
+ 
 
     return (
         <>
@@ -76,6 +103,16 @@ export default function ProjectDescription({
                     <DescPaper header="PI:">{pi}</DescPaper>
                 </Grid>
                 <Grid item xs={3}>
+                    <DescPaper header="COPI:">
+  
+  {Array.isArray(copi) && copi.map((coPiObject, index) => (
+  <div key={index}>{coPiObject.name}</div>
+))}
+
+  </DescPaper>
+                </Grid>
+                
+                <Grid item xs={3}>
                     <DescPaper header="From Date:">{fromDate}</DescPaper>
                 </Grid>
                 <Grid item xs={3}>
@@ -85,3 +122,5 @@ export default function ProjectDescription({
         </>
     );
 }
+
+

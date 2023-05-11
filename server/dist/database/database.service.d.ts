@@ -11,6 +11,7 @@ export declare class DatabaseService {
     constructor();
     verify_email(email: string): Promise<AuthToken>;
     project_details(auth: AuthToken, project_id: number): Promise<any>;
+    co_project_details(auth: AuthToken, project_id: number): Promise<any>;
     user_details(auth: AuthToken): Promise<Account>;
     view_grants(auth: AuthToken): Promise<any[]>;
     view_grant_access(auth: AuthToken, project_id: number): Promise<any[]>;

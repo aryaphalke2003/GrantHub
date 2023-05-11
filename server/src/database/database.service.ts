@@ -43,7 +43,7 @@ export class DatabaseService {
 
     async project_details(auth: AuthToken, project_id: number): Promise<any> {
         if (!auth) return null;
-
+       
         const result = await this.pool.query(
             "SELECT * FROM get_project_details($1::text, $2::int)",
             [auth.email, project_id]
@@ -53,6 +53,18 @@ export class DatabaseService {
         return result.rows[0];
     }
 
+
+    async co_project_details(auth: AuthToken, project_id: number): Promise<any> {
+        if (!auth) return null;
+
+        const result = await this.pool.query(
+            "SELECT * FROM get_coproject_details($1::text, $2::int)",
+            [auth.email, project_id]
+        );
+  
+        if (result.rowCount === 0) return null;
+        return result.rows[0];
+    }
     async user_details(auth: AuthToken): Promise<Account> {
         if (!auth) return null;
 

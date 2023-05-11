@@ -2284,6 +2284,28 @@ ALTER FUNCTION public.get_project_by_name(text, text)
 
 -- DROP FUNCTION IF EXISTS public.get_project_details(text, integer);
 
+
+CREATE OR REPLACE FUNCTION public.get_coproject_details(
+    _email text,
+    _project_id integer
+)
+RETURNS TABLE(name text)
+LANGUAGE 'plpgsql'
+COST 100
+VOLATILE PARALLEL UNSAFE
+AS $BODY$
+BEGIN
+    IF NOT has_access(_email, _project_id) THEN
+        RAISE EXCEPTION 'Access denied';
+    END IF;
+    RETURN QUERY
+        SELECT a.name
+        FROM account a
+        INNER JOIN access p ON p.email = a.email
+        WHERE p.role = 'Co-PI' AND p.project_id = _project_id;
+END;
+$BODY$;
+
 CREATE OR REPLACE FUNCTION public.get_project_details(
 	_email text,
 	_project_id integer)

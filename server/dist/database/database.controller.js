@@ -29,6 +29,13 @@ let DatabaseController = class DatabaseController {
         const auth = jwt_utils_1.JwtUtils.validate_auth_token(jwt);
         return this.databaseService.project_details(auth, project_id);
     }
+
+    async co_grant_details(jwt, project_id) {
+        const auth = jwt_utils_1.JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.co_project_details(auth, project_id);
+    }
+
+
     async all_fellows(jwt) {
         const auth = jwt_utils_1.JwtUtils.validate_auth_token(jwt);
         return this.databaseService.view_fellows(auth, null);
@@ -186,6 +193,14 @@ __decorate([
     __metadata("design:paramtypes", [String, Number]),
     __metadata("design:returntype", Promise)
 ], DatabaseController.prototype, "grant_details", null);
+__decorate([
+    (0, common_1.Get)("co_grants/:id"),
+    __param(0, (0, common_1.Query)("auth")),
+    __param(1, (0, common_1.Param)("id")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Number]),
+    __metadata("design:returntype", Promise)
+], DatabaseController.prototype, "co_grant_details", null);
 __decorate([
     (0, common_1.Get)("fellows"),
     __param(0, (0, common_1.Query)("auth")),

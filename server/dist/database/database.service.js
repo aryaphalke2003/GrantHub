@@ -53,11 +53,30 @@ let DatabaseService = class DatabaseService {
     async project_details(auth, project_id) {
         if (!auth)
             return null;
+         
         const result = await this.pool.query("SELECT * FROM get_project_details($1::text, $2::int)", [auth.email, project_id]);
         if (result.rowCount === 0)
             return null;
         return result.rows[0];
     }
+
+
+    ///////////////
+    async co_project_details(auth, project_id) {
+        if (!auth)
+            return null;
+
+        
+          
+        const result = await this.pool.query("SELECT * FROM get_coproject_details($1::text, $2::int)", [auth.email, project_id]);
+        if (result.rowCount === 0)
+            return null;
+       
+        return result.rows;
+    }
+
+    ///////////////
+
     async user_details(auth) {
         if (!auth)
             return null;
@@ -304,7 +323,7 @@ let DatabaseService = class DatabaseService {
                 }
             }
 
-            console.log(project.from);
+            
             await client.query("CALL add_excel_project($1::text, $2::text, $3::date, $4::text, $5::jsonb, $6::text, $7::project_type, $8::text)", [
                 auth.email,
                 project.name,

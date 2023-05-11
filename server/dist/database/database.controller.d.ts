@@ -11,6 +11,7 @@ export declare class DatabaseController {
     constructor(databaseService: DatabaseService);
     all_grants(jwt: string): Promise<any[]>;
     grant_details(jwt: string, project_id: number): Promise<any>;
+    co_grant_details(jwt: string, project_id: number): Promise<any>;
     all_fellows(jwt: string): Promise<any[]>;
     project_fellows(jwt: string, project_id: number): Promise<any[]>;
     project_expenses(jwt: string, project_id: string): Promise<any[]>;

@@ -36,7 +36,13 @@ export class DatabaseController {
         const auth = JwtUtils.validate_auth_token(jwt);
         return this.databaseService.project_details(auth, project_id);
     }
-
+    //////////////
+    @Get("co_grants/:id")
+    async co_grant_details(@Query("auth") jwt: string, @Param("id") project_id: number) {
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.co_project_details(auth, project_id);
+    }
+///////////////
     // get all fellows
     @Get("fellows")
     async all_fellows(@Query("auth") jwt: string) {
