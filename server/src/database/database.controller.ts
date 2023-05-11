@@ -1,660 +1,357 @@
-import { Injectable } from "@nestjs/common";
-import { Pool } from "pg";
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    Post,
+    Query,
+    UploadedFile,
+    UseInterceptors,
+} from "@nestjs/common";
+import { FileInterceptor } from "@nestjs/platform-express";
+import { JwtUtils } from "src/auth/jwt_utils";
 import Account from "src/interfaces/account.interface";
-import AuthToken from "src/interfaces/authtoken.interface";
 import ExcelProjectParams from "src/interfaces/excel_project_params.interface";
 import Expense from "src/interfaces/expense.interface";
 import Fellow from "src/interfaces/fellow.interface";
 import Installment from "src/interfaces/installment.interface";
 import Project from "src/interfaces/project.interface";
-import * as Excel from "exceljs";
-import * as moment from "moment";
+import { DatabaseService } from "./database.service";
 
-@Injectable()
-export class DatabaseService {
-    private readonly pool: Pool;
+@Controller("api")
+export class DatabaseController {
+    constructor(private readonly databaseService: DatabaseService) {}
 
-    constructor() {
-        this.pool = new Pool({
-
-            host: process.env.PGHOST,
-            user: process.env.PGUSER,
-            password: process.env.PGPASSWORD,
-            database: process.env.PGDATABASE,
-            port: +process.env.PGPORT,
-            ssl: true
-        });
-
+    // get all grants
+    @Get("grants")
+    async all_grants(@Query("auth") jwt: string) {
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.view_grants(auth);
     }
 
-    async verify_email(email: string): Promise<AuthToken> {
-        console.log("DATABASETS")
-        const result = await this.pool.query<Account>(
-            "SELECT * FROM account WHERE email = $1::text",
-            [email]
-        );
-        if (result.rowCount == 0) return null;
-        return {
-            email: result.rows[0].email,
-            type: result.rows[0].type,
-            name: result.rows[0].name,
-        };
+    // get details of grant with given ID
+    @Get("grants/:id")
+    async grant_details(@Query("auth") jwt: string, @Param("id") project_id: number) {
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.project_details(auth, project_id);
     }
 
-    async project_details(auth: AuthToken, project_id: number): Promise<any> {
-        if (!auth) return null;
-
-        const result = await this.pool.query(
-            "SELECT * FROM get_project_details($1::text, $2::int)",
-            [auth.email, project_id]
-        );
-
-        if (result.rowCount === 0) return null;
-        return result.rows[0];
+    // get all fellows
+    @Get("fellows")
+    async all_fellows(@Query("auth") jwt: string) {
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.view_fellows(auth, null);
     }
 
-    async user_details(auth: AuthToken): Promise<Account> {
-        if (!auth) return null;
-
-        const result = await this.pool.query<Account>(
-            "SELECT * FROM account WHERE email = $1::text",
-            [auth.email]
-        );
-        if (result.rowCount == 0) return null;
-        return result.rows[0];
+    // get fellows for specific project
+    @Get("fellows/:id")
+    async project_fellows(@Query("auth") jwt: string, @Param("id") project_id: number) {
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.view_fellows(auth, project_id);
     }
 
-    async view_grants(auth: AuthToken): Promise<any[]> {
-        if (!auth) return null;
-
-        return (
-            await this.pool.query("SELECT * FROM get_ui_projects_with_pins($1::text)", [
-                auth.email,
-            ])
-        ).rows;
+    // get expenses of specific project
+    @Get("expenses/:id")
+    async project_expenses(@Query("auth") jwt: string, @Param("id") project_id: string) {
+        const auth = JwtUtils.validate_auth_token(jwt);
+        const ids = JSON.parse(project_id);
+        return this.databaseService.view_grant_expenses(auth, ids);
     }
 
-    async view_grant_access(auth: AuthToken, project_id: number): Promise<any[]> {
-        if (!auth) return null;
-
-        return (
-            await this.pool.query("SELECT * FROM get_ui_access($1::text, $2::int)", [
-                auth.email,
-                project_id,
-            ])
-        ).rows;
+    // get budget of specific project
+    @Get("budget/:id")
+    async project_budget(@Query("auth") jwt: string, @Param("id") project_id: number) {
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.view_grant_budget(auth, project_id);
     }
 
-    async view_grant_expenses(
-        auth: AuthToken,
-        project_id: number | number[]
-    ): Promise<any[]> {
-        if (!auth) return null;
-
-        return (
-            await this.pool.query(
-                `SELECT * FROM get_ui_expenses($1::text, $2::${typeof project_id === "number" ? "int" : "int[]"
-                })`,
-                [auth.email, project_id]
-            )
-        ).rows;
-    }
-
-    async view_fellows(auth: AuthToken, project_id: number | null): Promise<any[]> {
-        if (!auth) return null;
-
-        return (
-            await this.pool.query("SELECT * FROM get_ui_fellows($1::text, $2)", [
-                auth.email,
-                project_id,
-            ])
-        ).rows;
-    }
-
-    async pin_project(auth: AuthToken, project_id: number) {
-        if (!auth) return null;
-
-        this.pool.query("CALL toggle_pin($1::text, $2::int)", [auth.email, project_id]);
-    }
-
-    async view_grant_budget(auth: AuthToken, project_id: number): Promise<any[]> {
-        if (!auth) return null;
-
-        return (
-            await this.pool.query("SELECT * FROM get_budget($1::text, $2::int)", [
-                auth.email,
-                project_id,
-            ])
-        ).rows;
-    }
-
-    async view_grant_remaining(
-        auth: AuthToken,
-        project_id: number,
-        actual: boolean,
-        committed: boolean
-    ): Promise<any> {
-        if (!auth) return null;
-        return (
-            await this.pool.query(
-                "SELECT * FROM get_remaining_budget($1::text, $2::int, $3::boolean, $4::boolean) as foo",
-                [auth.email, project_id, actual, committed]
-            )
-        ).rows[0].foo;
-    }
-
-    async view_active_faculty(auth: AuthToken): Promise<any[]> {
-        if (!auth) return null;
-
-        return (await this.pool.query("SELECT * FROM get_active_faculty()")).rows;
-    }
-
-    async view_all_accounts(auth: AuthToken): Promise<any[]> {
-        if (!auth) return null;
-
-        return (
-            await this.pool.query("SELECT * FROM get_accounts($1::text)", [auth.email])
-        ).rows;
-    }
-
-    async view_pending_projects(auth: AuthToken): Promise<any[]> {
-        if (!auth) return null;
-
-        return (
-            await this.pool.query("SELECT * FROM get_pending_projects($1::text)", [
-                auth.email,
-            ])
-        ).rows;
-    }
-
-    async view_pending_expenses(auth: AuthToken): Promise<any[]> {
-        if (!auth) return null;
-
-        return (
-            await this.pool.query("SELECT * FROM get_pending_expenses($1::text)", [
-                auth.email,
-            ])
-        ).rows;
-    }
-
-    async get_project_sanction(auth: AuthToken, project_id: number) {
-        if (!auth) return null;
-        return (
-            await this.pool.query(
-                "SELECT * FROM get_project_sanction($1::text, $2::int) as foo",
-                [auth.email, project_id]
-            )
-        ).rows[0].foo;
-    }
-
-    async get_notifications(auth: AuthToken) {
-        if (!auth) return null;
-        return (
-            await this.pool.query("SELECT * FROM get_notifications($1::text)", [
-                auth.email,
-            ])
-        ).rows;
-    }
-
-    async add_account(auth: AuthToken, account: Account) {
-        if (!auth) return null;
-
-        return this.pool.query(
-            "CALL add_account($1::text, $2::text, $3::text, $4::text, $5::text)",
-            [auth.email, account.email, account.type, account.dept, account.name]
+    // get remaining budget of a specific project
+    @Get("budget/remaining/:id")
+    async project_remaining(
+        @Query("auth") jwt: string,
+        @Param("id") project_id: number,
+        @Query("actual") actual: boolean,
+        @Query("committed") committed: boolean
+    ) {
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.view_grant_remaining(
+            auth,
+            project_id,
+            actual,
+            committed
         );
     }
 
-    async add_project(auth: AuthToken, project: Project) {
-        if (!auth) return null;
-
-        return this.pool.query(
-            "CALL add_project($1::text, $2::text, $3::date, $4::text, $5::jsonb, $6::text, $7::project_type, $8::text)",
-            [
-                auth.email,
-                project.name,
-                project.from,
-                project.org,
-                project.split,
-                project.remarks,
-                project.type,
-                project.pi,
-            ]
-        );
+    // get all accounts
+    @Get("accounts")
+    async all_accounts(@Query("auth") jwt: string) {
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.view_all_accounts(auth);
     }
 
-    async add_expense(auth: AuthToken, expense: Expense) {
-        if (!auth) return null;
-
-        return this.pool.query(
-            "CALL add_expense($1::text, $2::int, $3::text, $4::date, $5::numeric, $6::head_type, $7::text, $8::text)",
-            [
-                auth.email,
-                expense.project_id,
-                expense.particulars,
-                expense.date ? new Date(+expense.date) : null,
-                expense.amount,
-                expense.head,
-                expense.voucher_no,
-                expense.remarks,
-            ]
-        );
+    // get access information for specific project
+    @Get("access/:id")
+    async project_access(@Query("auth") jwt: string, @Param("id") project_id: number) {
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.view_grant_access(auth, project_id);
     }
 
-    async add_access(auth: AuthToken, email: string, project_id: number) {
-        if (!auth) return null;
-        return this.pool.query(
-            "CALL give_account_access($1::text, $2::text, $3::int, 'Co-PI'::role_type)",
-            [auth.email, email, project_id]
-        );
+    // get details for currently logged-in user
+    @Get("user")
+    async user_data(@Query("auth") jwt: string) {
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.user_details(auth);
     }
 
-    async add_installment(auth: AuthToken, project_id: number, installment: Installment) {
-        if (!auth) return null;
-        return this.pool.query(
-            "CALL add_installment($1::text, $2::int, $3::text, $4::text, $5::date, $6::json, $7::text)",
-            [
-                auth.email,
-                project_id,
-                installment.particulars,
-                installment.voucher,
-                new Date(Date.parse(installment.date)),
-                installment.split,
-                installment.remarks,
-            ]
-        );
+    // get all faculty
+    @Get("faculty")
+    async active_faculty(@Query("auth") jwt: string) {
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.view_active_faculty(auth);
     }
 
-    async add_fellow(auth: AuthToken, project_id: number, fellow: Fellow) {
-        if (!auth) return null;
-        return this.pool.query(
-            "CALL add_fellow($1::text, $2::text, $3::int, $4::fellow_type, $5::numeric, $6::boolean, $7::numeric, $8::date, $9::date)",
-            [
-                auth.email,
-                fellow.name,
-                project_id,
-                fellow.type,
-                fellow.salary,
-                fellow.hostel,
-                fellow.hra,
-                fellow.from_date,
-                fellow.to_date,
-            ]
-        );
+    // get sanctioned amounds for a specific project
+    @Get("sanction/:id")
+    async project_sanction(@Query("auth") jwt: string, @Param("id") project_id: number) {
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.get_project_sanction(auth, project_id);
     }
 
+    // get pending projects
+    @Get("pending/projects")
+    async pending_projects(@Query("auth") jwt: string) {
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.view_pending_projects(auth);
+    }
+
+    // get pending expenses
+    @Get("pending/expenses")
+    async pending_expenses(@Query("auth") jwt: string) {
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.view_pending_expenses(auth);
+    }
+
+    // get notifications for current user
+    @Get("notifs")
+    async get_notifications(@Query("auth") jwt: string) {
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.get_notifications(auth);
+    }
+
+    // toggle pin on specific project for given user
+    @Post("togglepin/:id")
+    async toggle_pin(@Query("auth") jwt: string, @Param("id") project_id: number) {
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.pin_project(auth, project_id);
+    }
+
+    // add new account
+    @Post("add/account")
+    async add_account(@Query("auth") jwt: string, @Body("account") account: Account) {
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.add_account(auth, account);
+    }
+
+    // add new project
+    @Post("add/project")
+    async add_project(@Query("auth") jwt: string, @Body("project") project: Project) {
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.add_project(auth, project);
+    }
+
+    // add new project from excel sheet
+    @Post("add/project/excel")
+    @UseInterceptors(FileInterceptor("file"))
     async add_project_excel(
-        auth: AuthToken,
-        params: ExcelProjectParams,
-        file: Express.Multer.File
+        @Query("auth") jwt: string,
+        @Body() body: ExcelProjectParams,
+        @UploadedFile() file: Express.Multer.File
     ) {
-        // ensure authorized and file exists
-        if (!auth || !file) return null;
-
-        // project details
-        let project = {
-            name: params.name,
-            pi: params.faculty,
-            type: params.projType,
-            from: params.fromDate,
-            to: null,
-            org: params.org,
-            split: {},
-            remarks: "",
-        } as Project;
-
-        const client = await this.pool.connect();
-
-        try {
-            // get workbook
-            const wb = new Excel.Workbook();
-            await wb.xlsx.load(file.buffer);
-            // get first sheet
-            const ws = wb.worksheets[0];
-
-            // function to convert cell string (A3) to [row, col] ([1, 3])
-            const cellStringToRC = (cell: string) => {
-                cell = cell.toLowerCase();
-                let i = 0;
-                let c = 0;
-                for (; i < cell.length; i++) {
-                    if (cell[i].match(/[a-z]/i)) {
-                        c *= 26;
-                        c += cell[i].charCodeAt(0) - "a".charCodeAt(0) + 1;
-                        continue;
-                    }
-                    break;
-                }
-                let r = +cell.substring(i);
-                return [r, c];
-            };
-
-            // find appropriate head for a string using regex matching
-            const stringToHead = (str: string) => {
-                if (str.match(/grant/i)) return "grant";
-                else if (str.match(/unforseen/i)) return "contingency";
-                else if (str.match(/consumable/i)) return "consumable";
-                else if (str.match(/overstr/i)) return "overhead";
-                else if (str.match(/equipment/i)) return "equipment";
-                else if (str.match(/contingency/i)) return "contingency";
-                else if (str.match(/manpower/i)) return "manpower";
-                else if (str.match(/consult/i)) return "consultancy_amount";
-                else if (str.match(/travel/i)) return "travel";
-                else return "others";
-            };
-
-            // boundaries of expense and budget tables
-            const expStart = cellStringToRC(params.expensesStartCell);
-            const expEnd = cellStringToRC(params.expensesEndCell);
-            const budStart = cellStringToRC(params.budgetStartCell);
-            const budEnd = cellStringToRC(params.budgetEndCell);
-
-            // head column in budget table
-            const headHead = budStart[1] + 1;
-            // sanction column in budget table
-            const sanctionHead = budStart[1] + 2;
-
-            // first row of budget table
-            let budgetRow = budStart[0] + 1;
-
-            for (; budgetRow < budEnd[0]; budgetRow += 1) {
-                // add sanction split
-                project.split[
-                    stringToHead(ws.getCell(budgetRow, headHead).value.toString())
-                ] = +ws.getCell(budgetRow, sanctionHead).value;
-            }
-
-            // create the project
-            await client.query(
-                "CALL add_project($1::text, $2::text, $3::date, $4::text, $5::jsonb, $6::text, $7::project_type, $8::text)",
-                [
-                    auth.email,
-                    project.name,
-                    new Date(Date.parse(project.from)),
-                    project.org,
-                    project.split,
-                    project.remarks,
-                    project.type,
-                    project.pi,
-                ]
-            );
-            // get project ID
-            const proj_id = (
-                await client.query(
-                    "SELECT * FROM get_project_by_name($1::text, $2::text) AS foo",
-                    [auth.email, project.name]
-                )
-            ).rows[0].foo;
-
-            // column for current installment
-            let installmentHead = budStart[1] + 3;
-            // back to first row
-            budgetRow = budStart[0] + 1;
-            // current expense row
-            let expenseRow = expStart[0] + 1;
-            // loop through all expenses
-            for (; expenseRow < expEnd[0]; expenseRow++) {
-                // get head
-                const head = stringToHead(
-                    ws
-                        .getCell(expenseRow, expStart[1] + 7)
-                        .value.toString()
-                        .toLowerCase()
-                );
-
-                // get expense details from row
-                let particulars_cell = ws.getCell(expenseRow, expStart[1] + 1);
-
-                let expense = {
-                    project_id: 0,
-                    particulars:
-                        particulars_cell.type === Excel.ValueType.RichText
-                            ? (particulars_cell.value as any).richText
-                                .map(x => x.text)
-                                .join()
-                            : particulars_cell.value,
-                    date: ws.getCell(expenseRow, expStart[1] + 3).value,
-                    amount: 0,
-                    head,
-                    voucher_no: null,
-                    remarks: ws.getCell(expenseRow, expStart[1] + 2).value,
-                } as Expense;
-
-                // if it is a payment
-                if (head !== "grant") {
-                    // get payment amount
-                    expense.amount = +ws.getCell(expenseRow, expStart[1] + 5).value;
-
-                    try {
-                        // add expense
-                        await client.query(
-                            "CALL add_expense($1::text, $2::int, $3::text, $4::date, $5::numeric, $6::head_type, $7::text, $8::text)",
-                            [
-                                auth.email,
-                                proj_id,
-                                expense.particulars,
-                                typeof expense.date === "string"
-                                    ? new Date(Date.parse(expense.date))
-                                    : expense.date,
-                                expense.amount,
-                                expense.head,
-                                expense.voucher_no,
-                                expense.remarks,
-                            ]
-                        );
-                    } catch (e) {
-                        console.error(e);
-                    }
-                } else {
-                    // if expense row is a reciept
-                    let split = {};
-                    // get split across heads
-                    for (; budgetRow < budEnd[0]; budgetRow++) {
-                        split[
-                            stringToHead(ws.getCell(budgetRow, headHead).value.toString())
-                        ] = +ws.getCell(budgetRow, installmentHead).value.toString();
-                    }
-                    budgetRow = budStart[0] + 1;
-                    installmentHead += 1;
-
-                    // add installment
-                    try {
-                        await client.query(
-                            "CALL add_installment($1::text, $2::int, $3::text, $4::text, $5::date, $6::json, $7::text)",
-                            [
-                                auth.email,
-                                proj_id,
-                                expense.particulars,
-                                expense.voucher_no,
-                                typeof expense.date === "string"
-                                    ? new Date(Date.parse(expense.date))
-                                    : expense.date,
-                                split,
-                                expense.remarks,
-                            ]
-                        );
-                    } catch (e) {
-                        console.error(e);
-                    }
-                }
-            }
-        } catch (e) {
-            console.error(e);
-            // any unhandle-able error
-            // delete the project if it exists
-            const proj_id = (
-                await client.query(
-                    "SELECT * FROM get_project_by_name($1::text, $2::text) AS foo",
-                    [auth.email, project.name]
-                )
-            ).rows[0].foo;
-            if (proj_id !== null)
-                await client.query("CALL delete_projects($1::text, $2::int[])", [
-                    auth.email,
-                    [proj_id],
-                ]);
-        } finally {
-            client.release();
-        }
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.add_project_excel(auth, body, file);
     }
 
-    async alter_expense(auth: AuthToken, expense_id: number, expense: Expense) {
-        if (!auth) return null;
-
-        return await this.pool.query(
-            "CALL alter_expense($1::text, $2::int, $3::text, $4::text, $5::date, $6::numeric, $7::head_type, $8::text)",
-            [
-                auth.email,
-                expense_id,
-                expense.particulars,
-                expense.voucher_no,
-                expense.date !== null ? new Date(Date.parse(expense.date)) : null,
-                expense.amount,
-                expense.head,
-                expense.remarks,
-            ]
-        );
+    // add new expense
+    @Post("add/expense")
+    async add_expense(@Query("auth") jwt: string, @Body("expense") expense: Expense) {
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.add_expense(auth, expense);
     }
 
+    // grant specific faculty access to specific project
+    @Post("add/access/:id")
+    async add_access(
+        @Query("auth") jwt: string,
+        @Body("email") email: string,
+        @Param("id") project_id: number
+    ) {
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.add_access(auth, email, project_id);
+    }
+
+    // add new installment/receipt for specific project
+    @Post("add/installment/:id")
+    async add_installment(
+        @Query("auth") jwt: string,
+        @Param("id") project_id: number,
+        @Body("installment") installment: Installment
+    ) {
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.add_installment(auth, project_id, installment);
+    }
+
+    // add new fellow for specific project
+    @Post("add/fellow/:id")
+    async add_fellow(
+        @Query("auth") jwt: string,
+        @Param("id") project_id: number,
+        @Body("fellow") fellow: Fellow
+    ) {
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.add_fellow(auth, project_id, fellow);
+    }
+
+    // update details for specific expense
+    @Post("update/expense")
+    async alter_expense(
+        @Query("auth") jwt: string,
+        @Body("expense") expense: Expense,
+        @Body("expense_id") expense_id: number
+    ) {
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.alter_expense(auth, expense_id, expense);
+    }
+
+    // update budget details for specific project
+    @Post("update/budget")
     async alter_installment(
-        auth: AuthToken,
-        expense_id: number,
-        split: { [key: string]: number }
+        @Query("auth") jwt: string,
+        @Body("expense_id") expense_id: number,
+        @Body("split") split: { [key: string]: number }
     ) {
-        if (!auth) return null;
-
-        return await this.pool.query(
-            "CALL alter_installment($1::text, $2::int, $3::json)",
-            [auth.email, expense_id, split]
-        );
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.alter_installment(auth, expense_id, split);
     }
 
+    // update sanctioned amounts for a project
+    @Post("update/sanction/:id")
     async alter_sanction(
-        auth: AuthToken,
-        project_id: number,
-        head: string,
-        amount: number
+        @Query("auth") jwt: string,
+        @Param("id") project_id: number,
+        @Body("head") head: string,
+        @Body("amount") amount: number
     ) {
-        if (!auth) return null;
-
-        return await this.pool.query(
-            "CALL alter_project_sanction($1::text, $2::int, $3::head_type, $4::numeric)",
-            [auth.email, project_id, head, amount]
-        );
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.alter_sanction(auth, project_id, head, amount);
     }
 
-    async alter_project(auth: AuthToken, project_id: number, project: Project) {
-        if (!auth) return null;
-
-        return await this.pool.query(
-            "CALL alter_project($1::text, $2::int, $3::text, $4::project_type, $5::date, $6::date, $7::text, $8::text, $9::text)",
-            [
-                auth.email,
-                project_id,
-                project.name,
-                project.type,
-                new Date(Date.parse(project.from)),
-                project.to ? new Date(Date.parse(project.to)) : null,
-                project.org,
-                project.remarks,
-                project.pi,
-            ]
-        );
+    // update project details
+    @Post("update/project/:id")
+    async alter_project(
+        @Query("auth") jwt: string,
+        @Body("project") project: Project,
+        @Param("id") project_id: number
+    ) {
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.alter_project(auth, project_id, project);
     }
 
-    async alter_account(auth: AuthToken, email: string, account: Account) {
-        if (!auth) return null;
-
-        return await this.pool.query(
-            "CALL alter_account($1::text, $2::text, $3::text, $4::text, $5::text, $6::text)",
-            [auth.email, account.name, email, account.email, account.type, account.dept]
-        );
+    // update account details
+    @Post("update/account")
+    async alter_account(
+        @Query("auth") jwt: string,
+        @Body("account") account: Account,
+        @Body("email") email: string
+    ) {
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.alter_account(auth, email, account);
     }
 
-    async alter_access(auth: AuthToken, email: string, project_id: number, role: string) {
-        if (!auth) return null;
-
-        return await this.pool.query(
-            "CALL alter_access($1::text, $2::text, $3::int, $4::role_type)",
-            [auth.email, email, project_id, role]
-        );
+    // update access details (role)
+    @Post("update/access/:id")
+    async alter_access(
+        @Query("auth") jwt: string,
+        @Body("email") email: string,
+        @Body("role") role: string,
+        @Param("id") project_id: number
+    ) {
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.alter_access(auth, email, project_id, role);
     }
 
-    async alter_fellow(auth: AuthToken, fellow: Fellow, fellow_id: number) {
-        if (!auth) return null;
-
-        return await this.pool.query(
-            "CALL alter_fellow($1::text, $2::int, $3::fellow_type, $4::numeric, $5::boolean, $6::numeric, $7::text, $8::date, $9::date)",
-            [
-                auth.email,
-                fellow_id,
-                fellow.type,
-                fellow.salary,
-                fellow.hostel,
-                fellow.hra,
-                fellow.name,
-                new Date(Date.parse(fellow.from_date)),
-                fellow.to_date ? new Date(Date.parse(fellow.to_date)) : null,
-            ]
-        );
+    // update fellow details
+    @Post("update/fellow/:id")
+    async alter_fellow(
+        @Query("auth") jwt: string,
+        @Body("fellow") fellow: Fellow,
+        @Param("id") fellow_id: number
+    ) {
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.alter_fellow(auth, fellow, fellow_id);
     }
 
-    async alter_pending_project(auth: AuthToken, pending_id: number, accepted: boolean) {
-        if (!auth) return null;
-
-        return await this.pool.query(
-            "CALL resolve_pending_project($1::text, $2::int, $3::boolean)",
-            [auth.email, pending_id, accepted]
-        );
+    // update pending project status
+    @Post("update/pending/project/:id")
+    async alter_pending_project(
+        @Query("auth") jwt: string,
+        @Body("accepted") accepted: boolean,
+        @Param("id") pending_id: number
+    ) {
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.alter_pending_project(auth, pending_id, accepted);
     }
 
-    async alter_pending_expense(auth: AuthToken, pending_id: number, accepted: boolean) {
-        if (!auth) return null;
-
-        return await this.pool.query(
-            "CALL resolve_pending_expense($1::text, $2::int, $3::boolean)",
-            [auth.email, pending_id, accepted]
-        );
+    // update pending expense status
+    @Post("update/pending/expense/:id")
+    async alter_pending_expense(
+        @Query("auth") jwt: string,
+        @Body("accepted") accepted: boolean,
+        @Param("id") pending_id: number
+    ) {
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.alter_pending_expense(auth, pending_id, accepted);
     }
 
-    async delete_grants(auth: AuthToken, project_ids: number[]) {
-        if (!auth) return null;
-        return await this.pool.query("CALL delete_projects($1::text, $2::int[])", [
-            auth.email,
-            project_ids,
-        ]);
+    // delete specific grants
+    @Delete("grants")
+    async delete_grants(@Query("auth") jwt: string, @Body("ids") ids: number[]) {
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.delete_grants(auth, ids);
     }
 
-    async delete_expenses(auth: AuthToken, expense_ids: number[]) {
-        if (!auth) return null;
-        return await this.pool.query("CALL delete_expenses($1::text, $2::int[])", [
-            auth.email,
-            expense_ids,
-        ]);
+    // delete specific expenses
+    @Delete("expenses")
+    async delete_expenses(@Query("auth") jwt: string, @Body("ids") ids: number[]) {
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.delete_expenses(auth, ids);
     }
 
-    async delete_access(auth: AuthToken, emails: string[], project_id: number) {
-        if (!auth) return null;
-        return await this.pool.query(
-            "CALL delete_access($1::text, $2::text[], $3::int)",
-            [auth.email, emails, project_id]
-        );
+    // remove access of specific faculty from a specific project
+    @Delete("access/:id")
+    async delete_access(
+        @Query("auth") jwt: string,
+        @Body("emails") emails: string[],
+        @Param("id") project_id: number
+    ) {
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.delete_access(auth, emails, project_id);
     }
 
-    async delete_users(auth: AuthToken, emails: string[]) {
-        if (!auth) return null;
-        return await this.pool.query("CALL delete_users($1::text, $2::text[])", [
-            auth.email,
-            emails,
-        ]);
+    // delete specific users
+    @Delete("users")
+    async delete_users(@Query("auth") jwt: string, @Body("emails") emails: string[]) {
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.delete_users(auth, emails);
     }
 
-    async delete_fellows(auth: AuthToken, fellow_ids: number[]) {
-        if (!auth) return null;
-
-        return await this.pool.query("CALL delete_fellows($1::text, $2::int[])", [
-            auth.email,
-            fellow_ids,
-        ]);
+    // delete specific fellows
+    @Delete("fellows")
+    async delete_fellows(
+        @Query("auth") jwt: string,
+        @Body("fellow_ids") fellow_ids: number[]
+    ) {
+        const auth = JwtUtils.validate_auth_token(jwt);
+        return this.databaseService.delete_fellows(auth, fellow_ids);
     }
 }
