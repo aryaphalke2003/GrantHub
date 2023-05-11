@@ -87,22 +87,22 @@ export default function ProjectDescription({
                     <DescPaper header="Project No.:">{project_id}</DescPaper>
                 </Grid>
                 
-                <Grid item xs={3}>
+                <Grid item xs={2}>
                     <DescPaper header="Project:">{name}</DescPaper>
                 </Grid>
-                <Grid item xs={3}>
+                <Grid item xs={2}>
                     <DescPaper header="Total Cost:">₹{total}</DescPaper>
                 </Grid>
-                <Grid item xs={4}>
+                <Grid item xs={2}>
                     <DescPaper header="Funding Agency:">{org}</DescPaper>
                 </Grid>
-                <Grid item xs={3}>
+                <Grid item xs={2}>
                     <DescPaper header="Remarks:">{remarks}</DescPaper>
                 </Grid>
-                <Grid item xs={3}>
+                <Grid item xs={2}>
                     <DescPaper header="PI:">{pi}</DescPaper>
                 </Grid>
-                <Grid item xs={3}>
+                <Grid item xs={2}>
                     <DescPaper header="COPI:">
   
   {Array.isArray(copi) && copi.map((coPiObject, index) => (
@@ -112,10 +112,10 @@ export default function ProjectDescription({
   </DescPaper>
                 </Grid>
                 
-                <Grid item xs={3}>
+                <Grid item xs={2}>
                     <DescPaper header="From Date:">{fromDate}</DescPaper>
                 </Grid>
-                <Grid item xs={3}>
+                <Grid item xs={2}>
                     <DescPaper header="To Date:">{toDate}</DescPaper>
                 </Grid>
             </Grid>
