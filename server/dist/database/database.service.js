@@ -343,7 +343,7 @@ let DatabaseService = class DatabaseService {
 
 
             for (; budgetRow < budEnd[0]; budgetRow += 1) {
-                console.log("SDf");
+              
                 const key = stringToHead(ws.getCell(budgetRow, headHead).value.toString());
                 const value = +ws.getCell(budgetRow, installmentHead).value.toString();
 
