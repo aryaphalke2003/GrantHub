@@ -25,7 +25,7 @@ let DatabaseService = class DatabaseService {
             password: process.env.PGPASSWORD,
             database: process.env.PGDATABASE,
             port: +process.env.PGPORT,
-            // ssl: true
+            ssl: true
             // host: '127.0.0.1',
             // user: 'postgres',
             // password: 'root',
@@ -303,7 +303,7 @@ let DatabaseService = class DatabaseService {
                     project.split[key] = value;
                 }
             }
-            
+
             console.log(project.from);
             await client.query("CALL add_excel_project($1::text, $2::text, $3::date, $4::text, $5::jsonb, $6::text, $7::project_type, $8::text)", [
                 auth.email,
