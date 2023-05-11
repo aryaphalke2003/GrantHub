@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "description": "",
   "scripts": {
-    "watch": "nodemon server.js & webpack --watch",
     "start": "npm --prefix ./server run start",
     "start:dev": "npm --prefix ./server run start:dev",
     "dev": "npm --prefix ./client run dev",
