@@ -28,7 +28,7 @@ export declare class DatabaseController {
     toggle_pin(jwt: string, project_id: number): Promise<any>;
     add_account(jwt: string, account: Account): Promise<import("pg").QueryResult<any>>;
     add_project(jwt: string, project: Project): Promise<import("pg").QueryResult<any>>;
-    add_project_excel(jwt: string, body: ExcelProjectParams, file: Express.Multer.File): Promise<any>;
+    add_excel_project(jwt: string, body: ExcelProjectParams, file: Express.Multer.File): Promise<any>;
     add_expense(jwt: string, expense: Expense): Promise<import("pg").QueryResult<any>>;
     add_access(jwt: string, email: string, project_id: number): Promise<import("pg").QueryResult<any>>;
     add_installment(jwt: string, project_id: number, installment: Installment): Promise<import("pg").QueryResult<any>>;

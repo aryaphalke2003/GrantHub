@@ -295,7 +295,7 @@ export class DatabaseService {
         );
     }
 
-    async add_project_excel(
+    async add_excel_project(
         auth: AuthToken,
         params: ExcelProjectParams,
         file: Express.Multer.File
@@ -387,7 +387,7 @@ export class DatabaseService {
 
             // create the project
             await client.query(
-                "CALL add_project_excel($1::text, $2::text, $3::date, $4::text, $5::jsonb, $6::text, $7::project_type, $8::text)",
+                "CALL add_excel_project($1::text, $2::text, $3::date, $4::text, $5::jsonb, $6::text, $7::project_type, $8::text)",
                 [
                     auth.email,
                     project.name,

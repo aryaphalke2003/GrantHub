@@ -32,7 +32,7 @@ export declare class DatabaseService {
     add_access(auth: AuthToken, email: string, project_id: number): Promise<import("pg").QueryResult<any>>;
     add_installment(auth: AuthToken, project_id: number, installment: Installment): Promise<import("pg").QueryResult<any>>;
     add_fellow(auth: AuthToken, project_id: number, fellow: Fellow): Promise<import("pg").QueryResult<any>>;
-    add_project_excel(auth: AuthToken, params: ExcelProjectParams, file: Express.Multer.File): Promise<any>;
+    add_excel_project(auth: AuthToken, params: ExcelProjectParams, file: Express.Multer.File): Promise<any>;
     alter_expense(auth: AuthToken, expense_id: number, expense: Expense): Promise<import("pg").QueryResult<any>>;
     alter_installment(auth: AuthToken, expense_id: number, split: {
         [key: string]: number;

@@ -233,7 +233,7 @@ let DatabaseService = class DatabaseService {
             fellow.to_date,
         ]);
     }
-    async add_project_excel(auth, params, file) {
+    async add_excel_project(auth, params, file) {
         if (!auth || !file)
             return null;
 

@@ -187,7 +187,7 @@ const get_columns: (
     },
     {
         field: "visit",
-        headerName: "",
+        headerName: "Enter",
         renderCell: params => {
             return (
                 <div>

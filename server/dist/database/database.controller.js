@@ -101,9 +101,9 @@ let DatabaseController = class DatabaseController {
         const auth = jwt_utils_1.JwtUtils.validate_auth_token(jwt);
         return this.databaseService.add_project(auth, project);
     }
-    async add_project_excel(jwt, body, file) {
+    async add_excel_project(jwt, body, file) {
         const auth = jwt_utils_1.JwtUtils.validate_auth_token(jwt);
-        return this.databaseService.add_project_excel(auth, body, file);
+        return this.databaseService.add_excel_project(auth, body, file);
     }
     async add_expense(jwt, expense) {
         const auth = jwt_utils_1.JwtUtils.validate_auth_token(jwt);
@@ -333,7 +333,7 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object, Object]),
     __metadata("design:returntype", Promise)
-], DatabaseController.prototype, "add_project_excel", null);
+], DatabaseController.prototype, "add_excel_project", null);
 __decorate([
     (0, common_1.Post)("add/expense"),
     __param(0, (0, common_1.Query)("auth")),

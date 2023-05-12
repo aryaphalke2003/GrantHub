@@ -169,13 +169,13 @@ export class DatabaseController {
     // add new project from excel sheet
     @Post("add/project/excel")
     @UseInterceptors(FileInterceptor("file"))
-    async add_project_excel(
+    async add_excel_project(
         @Query("auth") jwt: string,
         @Body() body: ExcelProjectParams,
         @UploadedFile() file: Express.Multer.File
     ) {
         const auth = JwtUtils.validate_auth_token(jwt);
-        return this.databaseService.add_project_excel(auth, body, file);
+        return this.databaseService.add_excel_project(auth, body, file);
     }
 
     // add new expense

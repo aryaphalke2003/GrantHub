@@ -14,7 +14,7 @@ const DescPaper = ({ header, children }) => (
 
 interface IData {
     name: string;
-  }
+}
 
 // Project description at the top of every project page
 export default function ProjectDescription({
@@ -35,32 +35,31 @@ export default function ProjectDescription({
     const [toDate, setToDate] = useState("");
 
     // fetch dats
-  
-    useEffect(() => {
-        axios
-            .get(`/api/co_grants/${project_id}`, {
-                params: { auth: cookies.auth_jwt },
-            })
-            .then(({ data }) => {
-                if (data === null) return;
-                else {
-              
-               const objectNames = data.map((object) => ({name:object.name}));
-              
 
-              setCopi(objectNames);
-          
-            }
+    useEffect(() => {
+        axios.get(`/api/co_grants/${project_id}`, { params: { auth: cookies.auth_jwt } })
+            .then(({ data }) => {
+                if (!Array.isArray(data)) {
+                    // If the response is not an array, convert it to an array with one item
+                    data = data ? [data] : [];
+                }
+
+                const objectNames = data.map((object) => ({ name: object.name }));
+                setCopi(objectNames);
+            })
+            .catch(error => {
+                // Handle the error, e.g. by displaying an error message to the user
+                console.error(error);
             });
     }, [project_id]);
 
     useEffect(() => {
-        axios            .get(`/api/grants/${project_id}`, {
-                params: { auth: cookies.auth_jwt },
-            })
+        axios.get(`/api/grants/${project_id}`, {
+            params: { auth: cookies.auth_jwt },
+        })
             .then(({ data }) => {
                 if (data === null) return;
-                
+
                 setName(data.name);
                 setOrg(data.organization);
                 setTotal(data.total_cost);
@@ -75,10 +74,10 @@ export default function ProjectDescription({
                     setToDate(`${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`);
                 }
             });
-    }, [project_id]  );
-   
-    
- 
+    }, [project_id]);
+
+
+
 
     return (
         <>
@@ -86,7 +85,7 @@ export default function ProjectDescription({
                 <Grid item xs={2}>
                     <DescPaper header="Project No.:">{project_id}</DescPaper>
                 </Grid>
-                
+
                 <Grid item xs={2}>
                     <DescPaper header="Title:">{name}</DescPaper>
                 </Grid>
@@ -104,14 +103,14 @@ export default function ProjectDescription({
                 </Grid>
                 <Grid item xs={2}>
                     <DescPaper header="COPI:">
-  
-  {Array.isArray(copi) && copi.map((coPiObject, index) => (
-  <div key={index}>{coPiObject.name}</div>
-))}
 
-  </DescPaper>
+                        {Array.isArray(copi) && copi.map((coPiObject, index) => (
+                            <div key={index}>{coPiObject.name}</div>
+                        ))}
+
+                    </DescPaper>
                 </Grid>
-                
+
                 <Grid item xs={2}>
                     <DescPaper header="From Date:">{fromDate}</DescPaper>
                 </Grid>
