@@ -120,7 +120,7 @@ export default function ProjectPage() {
                     />
                 </TableRenderer>
                 <TableRenderer
-                    header="Budget"
+                    header="Installment"
                     form={
                         <InstallmentForm
                             project_id={project_id}
