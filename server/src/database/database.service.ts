@@ -369,49 +369,76 @@ export class DatabaseService {
             const expEnd = cellStringToRC(params.expensesEndCell);
             const budStart = cellStringToRC(params.budgetStartCell);
             const budEnd = cellStringToRC(params.budgetEndCell);
-
-            // head column in budget table
             const headHead = budStart[1] + 1;
-            // sanction column in budget table
             const sanctionHead = budStart[1] + 2;
 
-            // first row of budget table
             let budgetRow = budStart[0] + 1;
 
             for (; budgetRow < budEnd[0]; budgetRow += 1) {
-                // add sanction split
-                project.split[
-                    stringToHead(ws.getCell(budgetRow, headHead).value.toString())
-                ] = +ws.getCell(budgetRow, sanctionHead).value;
+                const key = stringToHead(ws.getCell(budgetRow, headHead).value.toString());
+                const value = +ws.getCell(budgetRow, sanctionHead).value;
+
+                if (project.split.hasOwnProperty(key)) {
+                    project.split[key] += value;
+                } else {
+                    project.split[key] = value;
+                }
             }
 
-            // create the project
-            await client.query(
-                "CALL add_excel_project($1::text, $2::text, $3::date, $4::text, $5::jsonb, $6::text, $7::project_type, $8::text)",
-                [
-                    auth.email,
-                    project.name,
-                    new Date(Date.parse(project.from)),
-                    project.org,
-                    project.split,
-                    project.remarks,
-                    project.type,
-                    project.pi,
-                ]
-            );
-            // get project ID
-            const proj_id = (
-                await client.query(
-                    "SELECT * FROM get_project_by_name_excel($1::text, $2::text) AS foo",
-                    [auth.email, project.name]
-                )
-            ).rows[0].foo;
+            
+            await client.query("CALL add_excel_project($1::text, $2::text, $3::date, $4::text, $5::jsonb, $6::text, $7::project_type, $8::text)", [
+                auth.email,
+                project.name,
+                new Date(Date.parse(project.from)),
+                project.org,
+                project.split,
+                project.remarks,
+                project.type,
+                project.pi,
+            ]);
+            const proj_id = (await client.query("SELECT * FROM get_project_by_name_excel($1::text, $2::text) AS foo", [auth.email, project.name])).rows[0].foo;
 
-            // column for current installment
             let installmentHead = budStart[1] + 3;
-            // back to first row
+
             budgetRow = budStart[0] + 1;
-            // current expense row
+
+
+
+            for (; budgetRow < budEnd[0]; budgetRow += 1) {
+              
+                const key = stringToHead(ws.getCell(budgetRow, headHead).value.toString());
+                const value = +ws.getCell(budgetRow, installmentHead).value.toString();
+
+                if (installment.split.hasOwnProperty(key)) {
+                    installment.split[key] += value;
+                } else {
+                    installment.split[key] = value;
+                }
+            }
+
+            console.log(installment.split);
+            try {
+                await client.query("CALL add_installment($1::text, $2::int, $3::text, $4::text, $5::date, $6::json, $7::text)", [
+                    auth.email,
+                    proj_id,
+                    installment.particulars,
+                    installment.voucher,
+                    new Date(Date.parse(project.from)),
+                    installment.split,
+                    installment.remarks,
+                ]);
+            }
+            catch (e) {
+                console.error(e);
+            }
+
+
+
+
+
+
+
+
             let expenseRow = expStart[0] + 1;
             // loop through all expenses
             for (; expenseRow < expEnd[0]; expenseRow++) {
@@ -466,37 +493,37 @@ export class DatabaseService {
                     } catch (e) {
                         console.error(e);
                     }
-                } else {
-                    // if expense row is a reciept
-                    let split = {};
-                    // get split across heads
-                    for (; budgetRow < budEnd[0]; budgetRow++) {
-                        split[
-                            stringToHead(ws.getCell(budgetRow, headHead).value.toString())
-                        ] = +ws.getCell(budgetRow, installmentHead).value.toString();
-                    }
-                    budgetRow = budStart[0] + 1;
-                    installmentHead += 1;
+                // } else {
+                //     // if expense row is a reciept
+                //     let split = {};
+                //     // get split across heads
+                //     for (; budgetRow < budEnd[0]; budgetRow++) {
+                //         split[
+                //             stringToHead(ws.getCell(budgetRow, headHead).value.toString())
+                //         ] = +ws.getCell(budgetRow, installmentHead).value.toString();
+                //     }
+                //     budgetRow = budStart[0] + 1;
+                //     installmentHead += 1;
 
-                    // add installment
-                    try {
-                        await client.query(
-                            "CALL add_installment($1::text, $2::int, $3::text, $4::text, $5::date, $6::json, $7::text)",
-                            [
-                                auth.email,
-                                proj_id,
-                                expense.particulars,
-                                expense.voucher_no,
-                                typeof expense.date === "string"
-                                    ? new Date(Date.parse(expense.date))
-                                    : expense.date,
-                                split,
-                                expense.remarks,
-                            ]
-                        );
-                    } catch (e) {
-                        console.error(e);
-                    }
+                //     // add installment
+                //     try {
+                //         await client.query(
+                //             "CALL add_installment($1::text, $2::int, $3::text, $4::text, $5::date, $6::json, $7::text)",
+                //             [
+                //                 auth.email,
+                //                 proj_id,
+                //                 expense.particulars,
+                //                 expense.voucher_no,
+                //                 typeof expense.date === "string"
+                //                     ? new Date(Date.parse(expense.date))
+                //                     : expense.date,
+                //                 split,
+                //                 expense.remarks,
+                //             ]
+                //         );
+                //     } catch (e) {
+                //         console.error(e);
+                //     }
                 }
             }
         } catch (e) {
