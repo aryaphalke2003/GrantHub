@@ -387,7 +387,7 @@ export class DatabaseService {
 
             // create the project
             await client.query(
-                "CALL add_project($1::text, $2::text, $3::date, $4::text, $5::jsonb, $6::text, $7::project_type, $8::text)",
+                "CALL add_project_excel($1::text, $2::text, $3::date, $4::text, $5::jsonb, $6::text, $7::project_type, $8::text)",
                 [
                     auth.email,
                     project.name,
@@ -402,7 +402,7 @@ export class DatabaseService {
             // get project ID
             const proj_id = (
                 await client.query(
-                    "SELECT * FROM get_project_by_name($1::text, $2::text) AS foo",
+                    "SELECT * FROM get_project_by_name_excel($1::text, $2::text) AS foo",
                     [auth.email, project.name]
                 )
             ).rows[0].foo;

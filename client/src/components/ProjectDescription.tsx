@@ -88,7 +88,7 @@ export default function ProjectDescription({
                 </Grid>
                 
                 <Grid item xs={2}>
-                    <DescPaper header="Project:">{name}</DescPaper>
+                    <DescPaper header="Title:">{name}</DescPaper>
                 </Grid>
                 <Grid item xs={2}>
                     <DescPaper header="Total Cost:">₹{total}</DescPaper>

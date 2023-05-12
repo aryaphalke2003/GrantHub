@@ -238,9 +238,8 @@ let DatabaseService = class DatabaseService {
             return null;
 
         let installment = {
-            particulars: "sdfsd",
-            voucher: "sdfsd",
-            date: '12/12/2012',
+            particulars: "particulars",
+            voucher: "voucher",
             split: {},
             remarks: "",
         };
